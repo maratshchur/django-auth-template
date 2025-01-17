@@ -29,7 +29,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 
 
-ALLOWED_HOSTS = ['auth-template-c86e4dec6e2a.herokuapp.com/', '127.0.0.1']
+ALLOWED_HOSTS = ['https://auth-template-c86e4dec6e2a.herokuapp.com', '127.0.0.1']
 
 
 # Application definition
