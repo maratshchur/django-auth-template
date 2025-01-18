@@ -9,7 +9,6 @@ DATABASES = {
     "default": dj_database_url.config(default="postgres://localhost")
 }
 
-STATIC_ROOT = BASE_DIR / 'staticfiles' 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
