@@ -67,6 +67,7 @@ class LogoutView(APIView):
         refresh_token = request.data.get('refresh_token')
         if refresh_token:
             RefreshToken.objects.filter(token=refresh_token).delete()
+            return Response({"success": "User logged out."}, status=status.HTTP_200_OK)
         return Response({"error": "Refresh token is required"}, status=status.HTTP_400_BAD_REQUEST)
 
 class MeView(APIView):
