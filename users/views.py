@@ -8,13 +8,18 @@ from .authentication import CustomJWTAuthentication
 from .serializers import UserSerializer, RegisterSerializer, LoginSerializer, TokenSerializer
 from django.contrib.auth import get_user_model
 from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 User = get_user_model()
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
 
-    @swagger_auto_schema(request_body=RegisterSerializer)
+    @swagger_auto_schema(
+        request_body=RegisterSerializer,
+        responses={201: UserSerializer, 400: openapi.Response('Bad Request', RegisterSerializer)},
+        operation_summary="Register a new user"
+    )
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
@@ -29,7 +34,11 @@ class RegisterView(APIView):
 class LoginView(APIView):
     permission_classes = [AllowAny]
 
-    @swagger_auto_schema(request_body=LoginSerializer)
+    @swagger_auto_schema(
+        request_body=LoginSerializer,
+        responses={200: TokenSerializer, 400: openapi.Response('Bad Request', LoginSerializer)},
+        operation_summary="Log in a user"
+    )
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
@@ -41,12 +50,17 @@ class LoginView(APIView):
 
 class RefreshTokenView(APIView):
     permission_classes = [AllowAny]
-    
-    @swagger_auto_schema(request_body=TokenSerializer)
+
+    @swagger_auto_schema(
+        request_body=TokenSerializer,
+        responses={200: TokenSerializer, 400: openapi.Response('Bad Request', TokenSerializer)},
+        operation_summary="Refresh access token using refresh token"
+    )
     def post(self, request):
         refresh_token = request.data.get('refresh_token')
         if not refresh_token:
             return Response({"error": "Refresh token is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
         try:
             uuid.UUID(refresh_token) 
         except ValueError:
@@ -63,6 +77,11 @@ class RefreshTokenView(APIView):
 
 class LogoutView(APIView):
   
+    @swagger_auto_schema(
+        request_body=openapi.Schema(type=openapi.TYPE_OBJECT, properties={'refresh_token': openapi.Schema(type=openapi.TYPE_STRING)}),
+        responses={200: openapi.Response('Successful logout'), 400: openapi.Response('Bad Request')},
+        operation_summary="Log out a user"
+    )
     def post(self, request):
         refresh_token = request.data.get('refresh_token')
         if refresh_token:
@@ -74,9 +93,18 @@ class MeView(APIView):
     authentication_classes = [CustomJWTAuthentication]
     permission_classes = [IsAuthenticated]  
 
+    @swagger_auto_schema(
+        responses={200: UserSerializer},
+        operation_summary="Get current user information"
+    )
     def get(self, request):
         return Response(UserSerializer(request.user).data, status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(
+        request_body=UserSerializer,
+        responses={200: UserSerializer, 400: openapi.Response('Bad Request')},
+        operation_summary="Update current user information"
+    )
     def put(self, request):
         serializer = UserSerializer(request.user, data=request.data, partial=True)
         if serializer.is_valid():
