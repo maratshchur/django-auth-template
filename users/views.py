@@ -52,9 +52,18 @@ class RefreshTokenView(APIView):
     permission_classes = [AllowAny]
 
     @swagger_auto_schema(
-        request_body=TokenSerializer,
-        responses={200: TokenSerializer, 400: openapi.Response('Bad Request', TokenSerializer)},
-        operation_summary="Refresh access token using refresh token"
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={"refresh_token": openapi.Schema(type=openapi.TYPE_STRING, description="The refresh token")},
+            required=["refresh_token"],
+        ),
+        responses={
+            200: openapi.Response("Success", TokenSerializer),
+            400: openapi.Response("Bad Request", openapi.Schema(type=openapi.TYPE_OBJECT, properties={"error": openapi.Schema(type=openapi.TYPE_STRING)})),
+        },
+        operation_summary="Refresh access token using refresh token",
+        operation_description="Generates a new access token using a valid refresh token. The old refresh token is invalidated.",
+
     )
     def post(self, request):
         refresh_token = request.data.get('refresh_token')
@@ -78,9 +87,17 @@ class RefreshTokenView(APIView):
 class LogoutView(APIView):
   
     @swagger_auto_schema(
-        request_body=openapi.Schema(type=openapi.TYPE_OBJECT, properties={'refresh_token': openapi.Schema(type=openapi.TYPE_STRING)}),
-        responses={200: openapi.Response('Successful logout'), 400: openapi.Response('Bad Request')},
-        operation_summary="Log out a user"
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={"refresh_token": openapi.Schema(type=openapi.TYPE_STRING)},
+            required=["refresh_token"],
+        ),
+        responses={
+            200: openapi.Response("Successful logout"),
+            400: openapi.Response("Bad Request"),
+        },
+        operation_summary="Log out a user",
+        operation_description="Invalidates the provided refresh token, logging the user out.",
     )
     def post(self, request):
         refresh_token = request.data.get('refresh_token')
@@ -95,15 +112,20 @@ class MeView(APIView):
 
     @swagger_auto_schema(
         responses={200: UserSerializer},
-        operation_summary="Get current user information"
+        operation_summary="Get current user information",
+        operation_description="Retrieves the information of the currently authenticated user.",
     )
     def get(self, request):
         return Response(UserSerializer(request.user).data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
         request_body=UserSerializer,
-        responses={200: UserSerializer, 400: openapi.Response('Bad Request')},
-        operation_summary="Update current user information"
+        responses={
+            200: UserSerializer,
+            400: openapi.Response("Bad Request"),
+        },
+        operation_summary="Update current user information",
+        operation_description="Updates the information of the currently authenticated user.",
     )
     def put(self, request):
         serializer = UserSerializer(request.user, data=request.data, partial=True)
